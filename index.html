@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI产品用户评论分析器</title>
+    <style>
+        body {
+            font-family: "微软雅黑";
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 0 20px;
+            background: #f9fafc;
+        }
+        textarea {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            margin: 10px 0;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>讯飞AI产品 · 评论情感分析</h1>
+
+    <textarea id="comment" placeholder="粘贴用户评论~"></textarea>
+    <br>
+    <button onclick="checkSentiment()">开始分析</button>
+
+    <div id="result" style="margin-top:20px; padding:15px; background:#f5f5f5; border-radius:8px;"></div>
+
+<script>
+const goodWords = ["好用", "准确", "清晰", "方便", "智能", "推荐", "满意", "识别快", "翻译准"];
+const badWords = ["卡顿", "噪音", "误差", "难用", "失望", "麻烦", "识别慢", "耗电快"];
+
+function checkSentiment() {
+    let text = document.getElementById("comment").value;
+    let good = 0, bad = 0;
+
+    goodWords.forEach(w => text.includes(w) && good++);
+    badWords.forEach(w => text.includes(w) && bad++);
+
+    let sentiment = "中性";
+    if (good > bad) sentiment = "✅ 正面评价";
+    if (bad > good) sentiment = "❌ 负面评价";
+
+    document.getElementById("result").innerHTML = `
+        <h3>分析结果</h3>
+        <p>情感倾向：${sentiment}</p>
+        <p>正面关键词：${good} 个</p>
+        <p>负面关键词：${bad} 个</p>
+        <p><b>实习建议：</b>${getAdvice(sentiment)}</p>
+    `;
+}
+
+function getAdvice(sentiment) {
+    if (sentiment.includes("正面")) return "整理卖点，用于GTM营销宣传";
+    if (sentiment.includes("负面")) return "记录问题，推动产品优化迭代";
+    return "继续收集更多用户反馈";
+}
+</script>
+</body>
+</html>
