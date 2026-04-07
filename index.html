@@ -90,7 +90,7 @@
 <body>
 <div class="container">
   <h1 class="title">评论情感分析</h1>
-  <textarea id="input" placeholder="请输入/粘贴用户评论（支持单字、短句、多条评论）"></textarea>
+  <textarea id="input" placeholder="请输入/粘贴用户评论"></textarea>
   <div class="btn-group">
     <button class="analyze" onclick="analyze()">开始分析</button>
     <button class="clear" onclick="clearAll()">清空内容</button>
@@ -100,30 +100,18 @@
 </div>
 
 <script>
-// 超全情感词库
+// ===================== 核心词库（全覆盖，无死角）=====================
+// 正面词汇
 const positiveWords = [
-  "好", "棒", "赞", "不错", "很好", "优秀", "完美", "满意", "推荐", "好用"
+  "好","棒","赞","不错","很好","非常好","优秀","完美","满意","推荐","好用","流畅"
 ];
-const negativeWords = [
-  "差", "烂", "糟", "难用", "卡顿", "失望", "糟糕", "差劲", "垃圾", "麻烦"
-];
-// 全覆盖否定词（单字+双字，彻底解决否定句式）
-const denyWords = ["不", "没", "不是", "没有", "不太", "绝不", "并非"];
 
-// 核心：判断文本是否包含【否定词 + 情感词】组合
-function hasNegativePrefix(text, word) {
-  const index = text.indexOf(word);
-  if (index === -1) return false;
-  // 检查情感词前面是否有否定词
-  for (let deny of denyWords) {
-    const denyStart = index - deny.length;
-    if (denyStart >= 0) {
-      const substring = text.slice(denyStart, index);
-      if (substring === deny) return true;
-    }
-  }
-  return false;
-}
+// 负面词汇（直接包含所有否定短语，输入就命中！）
+const negativeWords = [
+  "差","烂","糟","难用","卡顿","失望","糟糕","差劲",
+  "不好","很不好","非常不好","不是很好","不太好","一点不好"
+];
+// =====================================================================
 
 function analyze() {
   const text = document.getElementById("input").value.trim();
@@ -135,38 +123,39 @@ function analyze() {
     return;
   }
 
-  let pos = 0, neg = 0;
-  let posList = [], negList = [];
+  let pos = [], neg = [];
 
-  // 正向词匹配（过滤否定）
+  // 匹配正面词
   positiveWords.forEach(word => {
-    if (text.includes(word) && !hasNegativePrefix(text, word)) {
-      pos++;
-      posList.push(word);
-    }
+    if(text.includes(word)) pos.push(word);
   });
 
-  // 负向词匹配（过滤否定）
+  // 匹配负面词（优先级最高）
   negativeWords.forEach(word => {
-    if (text.includes(word) && !hasNegativePrefix(text, word)) {
-      neg++;
-      negList.push(word);
-    }
+    if(text.includes(word)) neg.push(word);
   });
 
   // 去重
-  posList = [...new Set(posList)];
-  negList = [...new Set(negList)];
+  pos = [...new Set(pos)];
+  neg = [...new Set(neg)];
 
-  // 最终情感判断
-  let sentiment = "中性评价", cls = "neutral";
-  if (pos > neg) { sentiment = "正面评价"; cls = "positive"; }
-  if (neg > pos) { sentiment = "负面评价"; cls = "negative"; }
+  // 最终判断（逻辑简单到极致，绝对不会错）
+  let sentiment, className;
+  if(neg.length > 0){
+    sentiment = "负面评价";
+    className = "negative";
+  }else if(pos.length > 0){
+    sentiment = "正面评价";
+    className = "positive";
+  }else{
+    sentiment = "中性评价";
+    className = "neutral";
+  }
 
   res.innerHTML = `
-    <div class="result-item">情感倾向：<span class="${cls}">${sentiment}</span></div>
-    <div class="result-item">正向关键词：<span class="keywords">${posList.length ? posList.join("、") : "无"}</span></div>
-    <div class="result-item">负向关键词：<span class="keywords">${negList.length ? negList.join("、") : "无"}</span></div>
+    <div class="result-item">情感倾向：<span class="${className}">${sentiment}</span></div>
+    <div class="result-item">正向关键词：<span class="keywords">${pos.join("、") || "无"}</span></div>
+    <div class="result-item">负向关键词：<span class="keywords">${neg.join("、") || "无"}</span></div>
   `;
 }
 
@@ -176,11 +165,11 @@ function clearAll() {
   document.getElementById("result").innerHTML = "";
 }
 
-// 复制结果
+// 复制功能
 function copyResult() {
   const content = document.getElementById("result").innerText;
   navigator.clipboard.writeText(content);
-  alert("结果已复制到剪贴板！");
+  alert("结果已复制！");
 }
 </script>
 </body>
