@@ -9,7 +9,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      font-family: "Inter", system-ui, sans-serif;
     }
     body {
       background-color: #f8f9fc;
@@ -34,9 +34,6 @@
       margin-bottom: 24px;
       text-align: center;
     }
-    .input-box {
-      width: 100%;
-    }
     textarea {
       width: 100%;
       height: 150px;
@@ -53,9 +50,6 @@
     textarea:focus {
       border-color: #3b82f6;
     }
-    textarea::placeholder {
-      color: #9ca3af;
-    }
     .analyze-btn {
       width: 100%;
       height: 48px;
@@ -67,7 +61,6 @@
       font-weight: 500;
       margin-top: 16px;
       cursor: pointer;
-      transition: background-color 0.2s ease;
     }
     .analyze-btn:hover {
       background-color: #2563eb;
@@ -106,32 +99,38 @@
 <body>
   <div class="container">
     <h1 class="title">评论情感分析</h1>
-    <div class="input-box">
-      <textarea id="commentText" placeholder="请粘贴用户评论内容，支持单条/多条分析"></textarea>
-      <button class="analyze-btn" onclick="startAnalyze()">开始分析</button>
-    </div>
+    <textarea id="commentText" placeholder="请粘贴用户评论内容，支持单条/多条分析"></textarea>
+    <button class="analyze-btn" onclick="startAnalyze()">开始分析</button>
     <div class="result-box" id="resultArea"></div>
   </div>
 
   <script>
-    // 情感词库（带权重）+ 否定词过滤，分析更精准
+    // 正面词库
     const positiveList = [
       { word: "好用", weight: 2 },{ word: "准确", weight: 2 },
       { word: "清晰", weight: 2 },{ word: "智能", weight: 2 },
       { word: "流畅", weight: 1.5 },{ word: "便捷", weight: 1.5 },
       { word: "推荐", weight: 1.5 },{ word: "满意", weight: 1.5 }
     ];
+
+    // 负面词库
     const negativeList = [
       { word: "卡顿", weight: 2 },{ word: "噪音", weight: 2 },
       { word: "难用", weight: 2.5 },{ word: "失望", weight: 2 },
       { word: "识别慢", weight: 2 },{ word: "耗电快", weight: 1.5 },
       { word: "麻烦", weight: 1.5 },{ word: "误差大", weight: 2 }
     ];
+
+    // 否定词
     const denyWords = ["不", "没", "不是", "不会", "无需", "不要"];
 
     function startAnalyze() {
       const text = document.getElementById("commentText").value.trim();
       const resArea = document.getElementById("resultArea");
+
+      // 每次点击先清空结果
+      resArea.innerHTML = "";
+
       if (!text) {
         resArea.innerHTML = `<div class="result-item">请输入评论内容后再分析~</div>`;
         return;
@@ -140,43 +139,53 @@
       let posScore = 0, negScore = 0;
       let posKeys = [], negKeys = [];
 
-      // 正面词检测（过滤否定）
-      positiveList.forEach(item => {
+      // 检查正面
+      for (let item of positiveList) {
         if (text.includes(item.word)) {
-          const hasDeny = denyWords.some(d => {
-            const idx = text.indexOf(item.word);
-            return idx > 0 && text.substring(idx-2, idx).includes(d);
-          });
+          let hasDeny = false;
+          for (let d of denyWords) {
+            const pos = text.indexOf(item.word);
+            if (pos > 0 && text.substring(pos - 2, pos).includes(d)) {
+              hasDeny = true;
+            }
+          }
           if (!hasDeny) {
             posScore += item.weight;
             posKeys.push(item.word);
           }
         }
-      });
+      }
 
-      // 负面词检测（过滤否定）
-      negativeList.forEach(item => {
+      // 检查负面
+      for (let item of negativeList) {
         if (text.includes(item.word)) {
-          const hasDeny = denyWords.some(d => {
-            const idx = text.indexOf(item.word);
-            return idx > 0 && text.substring(idx-2, idx).includes(d);
-          });
+          let hasDeny = false;
+          for (let d of denyWords) {
+            const pos = text.indexOf(item.word);
+            if (pos > 0 && text.substring(pos - 2, pos).includes(d)) {
+              hasDeny = true;
+            }
+          }
           if (!hasDeny) {
             negScore += item.weight;
             negKeys.push(item.word);
           }
         }
-      });
-
-      // 判断情感
-      let sentiment = "中性评价", sentimentClass = "sentiment-neutral";
-      if (posScore > negScore && posScore > 0) {
-        sentiment = "正面评价"; sentimentClass = "sentiment-positive";
-      } else if (negScore > posScore && negScore > 0) {
-        sentiment = "负面评价"; sentimentClass = "sentiment-negative";
       }
 
-      // 渲染结果
+      // 判断情感
+      let sentiment = "中性评价";
+      let sentimentClass = "sentiment-neutral";
+
+      if (posScore > negScore && posScore > 0) {
+        sentiment = "正面评价";
+        sentimentClass = "sentiment-positive";
+      } else if (negScore > posScore && negScore > 0) {
+        sentiment = "负面评价";
+        sentimentClass = "sentiment-negative";
+      }
+
+      // 输出结果
       resArea.innerHTML = `
         <div class="result-item">情感倾向：<span class="${sentimentClass}">${sentiment}</span></div>
         <div class="result-item">正面关键词：<span class="keyword-tag">${posKeys.length ? posKeys.join("、") : "无"}</span></div>
