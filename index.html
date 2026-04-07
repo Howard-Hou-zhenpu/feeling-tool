@@ -9,7 +9,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      font-family: "Inter", system-ui, sans-serif;
     }
     body {
       background: #f8f9fc;
@@ -65,21 +65,10 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .analyze {
-      background: #2563eb;
-      color: #fff;
-    }
-    .analyze:hover {
-      background: #1d4ed8;
-    }
-    .clear {
-      background: #f1f5f9;
-      color: #475569;
-    }
-    .copy {
-      background: #10b981;
-      color: #fff;
-    }
+    .analyze { background: #2563eb; color: #fff; }
+    .analyze:hover { background: #1d4ed8; }
+    .clear { background: #f1f5f9; color: #475569; }
+    .copy { background: #10b981; color: #fff; }
     .result-box {
       margin-top: 24px;
       padding: 24px;
@@ -111,31 +100,31 @@
 </div>
 
 <script>
-// ==============================================
-// 🔥 超全情感词库（覆盖90%中文产品/日常评论词汇）
-// ==============================================
-// 正向词汇（单字+词语+常用评价）
+// 超全情感词库
 const positiveWords = [
-  "好", "棒", "赞", "强", "优", "佳", "不错", "很好", "非常好",
-  "优秀", "完美", "满意", "推荐", "值得", "好用", "易用", "便捷",
-  "流畅", "稳定", "清晰", "准确", "智能", "高效", "惊喜", "喜欢",
-  "给力", "牛逼", "出色", "专业", "贴心", "省心", "好评", "爱了"
+  "好", "棒", "赞", "不错", "很好", "优秀", "完美", "满意", "推荐", "好用"
 ];
-
-// 负向词汇（单字+词语+常用评价）
 const negativeWords = [
-  "差", "烂", "坑", "弱", "糟", "坏", "垃圾", "很差", "非常差",
-  "难用", "卡顿", "死机", "闪退", "噪音", "耗电", "发烫", "误差",
-  "失望", "糟糕", "垃圾", "恶心", "垃圾", "麻烦", "繁琐", "迟钝",
-  "坑爹", "无语", "差劲", "垃圾", "缺陷", "bug", "故障", "差评"
+  "差", "烂", "糟", "难用", "卡顿", "失望", "糟糕", "差劲", "垃圾", "麻烦"
 ];
+// 全覆盖否定词（单字+双字，彻底解决否定句式）
+const denyWords = ["不", "没", "不是", "没有", "不太", "绝不", "并非"];
 
-// 否定词（过滤：不好、不推荐、不行）
-const denyWords = ["不", "没", "非", "无", "不是", "不会", "不要", "不能"];
+// 核心：判断文本是否包含【否定词 + 情感词】组合
+function hasNegativePrefix(text, word) {
+  const index = text.indexOf(word);
+  if (index === -1) return false;
+  // 检查情感词前面是否有否定词
+  for (let deny of denyWords) {
+    const denyStart = index - deny.length;
+    if (denyStart >= 0) {
+      const substring = text.slice(denyStart, index);
+      if (substring === deny) return true;
+    }
+  }
+  return false;
+}
 
-// ==============================================
-// 核心分析函数（无限点击，无BUG）
-// ==============================================
 function analyze() {
   const text = document.getElementById("input").value.trim();
   const res = document.getElementById("result");
@@ -149,32 +138,31 @@ function analyze() {
   let pos = 0, neg = 0;
   let posList = [], negList = [];
 
-  // 匹配正向词
+  // 正向词匹配（过滤否定）
   positiveWords.forEach(word => {
-    if (text.includes(word)) {
-      const hasDeny = denyWords.some(d => text.slice(text.indexOf(word)-2, text.indexOf(word)).includes(d));
-      if (!hasDeny) { pos++; posList.push(word); }
+    if (text.includes(word) && !hasNegativePrefix(text, word)) {
+      pos++;
+      posList.push(word);
     }
   });
 
-  // 匹配负向词
+  // 负向词匹配（过滤否定）
   negativeWords.forEach(word => {
-    if (text.includes(word)) {
-      const hasDeny = denyWords.some(d => text.slice(text.indexOf(word)-2, text.indexOf(word)).includes(d));
-      if (!hasDeny) { neg++; negList.push(word); }
+    if (text.includes(word) && !hasNegativePrefix(text, word)) {
+      neg++;
+      negList.push(word);
     }
   });
 
-  // 去重关键词
+  // 去重
   posList = [...new Set(posList)];
   negList = [...new Set(negList)];
 
-  // 判断情感
+  // 最终情感判断
   let sentiment = "中性评价", cls = "neutral";
   if (pos > neg) { sentiment = "正面评价"; cls = "positive"; }
   if (neg > pos) { sentiment = "负面评价"; cls = "negative"; }
 
-  // 渲染结果
   res.innerHTML = `
     <div class="result-item">情感倾向：<span class="${cls}">${sentiment}</span></div>
     <div class="result-item">正向关键词：<span class="keywords">${posList.length ? posList.join("、") : "无"}</span></div>
@@ -188,11 +176,11 @@ function clearAll() {
   document.getElementById("result").innerHTML = "";
 }
 
-// 复制结果功能
+// 复制结果
 function copyResult() {
   const content = document.getElementById("result").innerText;
   navigator.clipboard.writeText(content);
-  alert("结果已复制！");
+  alert("结果已复制到剪贴板！");
 }
 </script>
 </body>
