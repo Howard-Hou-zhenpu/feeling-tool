@@ -105,20 +105,16 @@
   </div>
 
   <script>
-    // 正面词库
+    // 正面词库（已加入：好、很好、不错等简单词）
     const positiveList = [
-      { word: "好用", weight: 2 },{ word: "准确", weight: 2 },
-      { word: "清晰", weight: 2 },{ word: "智能", weight: 2 },
-      { word: "流畅", weight: 1.5 },{ word: "便捷", weight: 1.5 },
-      { word: "推荐", weight: 1.5 },{ word: "满意", weight: 1.5 }
+      "好", "很好", "不错", "好用", "准确", "清晰", "智能",
+      "流畅", "便捷", "推荐", "满意", "识别快", "翻译准"
     ];
 
     // 负面词库
     const negativeList = [
-      { word: "卡顿", weight: 2 },{ word: "噪音", weight: 2 },
-      { word: "难用", weight: 2.5 },{ word: "失望", weight: 2 },
-      { word: "识别慢", weight: 2 },{ word: "耗电快", weight: 1.5 },
-      { word: "麻烦", weight: 1.5 },{ word: "误差大", weight: 2 }
+      "差", "很差", "烂", "卡顿", "噪音", "难用", "失望",
+      "识别慢", "耗电快", "麻烦", "误差大"
     ];
 
     // 否定词
@@ -127,8 +123,6 @@
     function startAnalyze() {
       const text = document.getElementById("commentText").value.trim();
       const resArea = document.getElementById("resultArea");
-
-      // 每次点击先清空结果
       resArea.innerHTML = "";
 
       if (!text) {
@@ -136,39 +130,32 @@
         return;
       }
 
-      let posScore = 0, negScore = 0;
-      let posKeys = [], negKeys = [];
+      let posCount = 0;
+      let negCount = 0;
+      let posKeys = [];
+      let negKeys = [];
 
-      // 检查正面
-      for (let item of positiveList) {
-        if (text.includes(item.word)) {
-          let hasDeny = false;
-          for (let d of denyWords) {
-            const pos = text.indexOf(item.word);
-            if (pos > 0 && text.substring(pos - 2, pos).includes(d)) {
-              hasDeny = true;
-            }
-          }
+      // 匹配正面
+      for (let w of positiveList) {
+        if (text.includes(w)) {
+          // 简单判断前面有没有否定词
+          const pos = text.indexOf(w);
+          const hasDeny = pos > 0 && denyWords.some(d => text.slice(pos-2, pos).includes(d));
           if (!hasDeny) {
-            posScore += item.weight;
-            posKeys.push(item.word);
+            posCount++;
+            posKeys.push(w);
           }
         }
       }
 
-      // 检查负面
-      for (let item of negativeList) {
-        if (text.includes(item.word)) {
-          let hasDeny = false;
-          for (let d of denyWords) {
-            const pos = text.indexOf(item.word);
-            if (pos > 0 && text.substring(pos - 2, pos).includes(d)) {
-              hasDeny = true;
-            }
-          }
+      // 匹配负面
+      for (let w of negativeList) {
+        if (text.includes(w)) {
+          const pos = text.indexOf(w);
+          const hasDeny = pos > 0 && denyWords.some(d => text.slice(pos-2, pos).includes(d));
           if (!hasDeny) {
-            negScore += item.weight;
-            negKeys.push(item.word);
+            negCount++;
+            negKeys.push(w);
           }
         }
       }
@@ -177,19 +164,18 @@
       let sentiment = "中性评价";
       let sentimentClass = "sentiment-neutral";
 
-      if (posScore > negScore && posScore > 0) {
+      if (posCount > negCount) {
         sentiment = "正面评价";
         sentimentClass = "sentiment-positive";
-      } else if (negScore > posScore && negScore > 0) {
+      } else if (negCount > posCount) {
         sentiment = "负面评价";
         sentimentClass = "sentiment-negative";
       }
 
-      // 输出结果
       resArea.innerHTML = `
         <div class="result-item">情感倾向：<span class="${sentimentClass}">${sentiment}</span></div>
-        <div class="result-item">正面关键词：<span class="keyword-tag">${posKeys.length ? posKeys.join("、") : "无"}</span></div>
-        <div class="result-item">负面关键词：<span class="keyword-tag">${negKeys.length ? negKeys.join("、") : "无"}</span></div>
+        <div class="result-item">正面关键词：<span class="keyword-tag">${posKeys.length ? [...new Set(posKeys)].join("、") : "无"}</span></div>
+        <div class="result-item">负面关键词：<span class="keyword-tag">${negKeys.length ? [...new Set(negKeys)].join("、") : "无"}</span></div>
       `;
     }
   </script>
