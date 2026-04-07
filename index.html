@@ -1,207 +1,188 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>评论情感分析</title>
-    <style>
-        /* 极简UI风格，干净高级，无多余装饰 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-        }
-        body {
-            background-color: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 30px;
-        }
-        h1 {
-            font-size: 24px;
-            color: #333333;
-            text-align: center;
-            margin-bottom: 25px;
-            font-weight: 600;
-        }
-        #comment {
-            width: 100%;
-            height: 140px;
-            padding: 15px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 15px;
-            resize: none;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        #comment:focus {
-            border-color: #4299e1; /* 简约主色，不刺眼 */
-        }
-        #comment::placeholder {
-            color: #9ca3af;
-            font-size: 14px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4299e1;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            margin: 15px 0;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #3182ce;
-        }
-        #result {
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #fafafa;
-            border: 1px solid #e5e7eb;
-        }
-        .result-item {
-            margin-bottom: 12px;
-            font-size: 15px;
-            color: #4b5563;
-        }
-        .sentiment-positive {
-            color: #10b981;
-            font-weight: 600;
-        }
-        .sentiment-negative {
-            color: #ef4444;
-            font-weight: 600;
-        }
-        .sentiment-neutral {
-            color: #6b7280;
-            font-weight: 600;
-        }
-        .keywords {
-            color: #4299e1;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>评论情感分析</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+    }
+    body {
+      background-color: #f8f9fc;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 620px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      padding: 36px 32px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .input-box {
+      width: 100%;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #374151;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    textarea:focus {
+      border-color: #3b82f6;
+    }
+    textarea::placeholder {
+      color: #9ca3af;
+    }
+    .analyze-btn {
+      width: 100%;
+      height: 48px;
+      background-color: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 500;
+      margin-top: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .analyze-btn:hover {
+      background-color: #2563eb;
+    }
+    .result-box {
+      margin-top: 24px;
+      padding: 20px;
+      background-color: #f9fafb;
+      border-radius: 12px;
+      min-height: 100px;
+    }
+    .result-item {
+      font-size: 15px;
+      color: #4b5563;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .sentiment-positive {
+      color: #10b981;
+      font-weight: 600;
+    }
+    .sentiment-negative {
+      color: #ef4444;
+      font-weight: 600;
+    }
+    .sentiment-neutral {
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .keyword-tag {
+      color: #3b82f6;
+      font-weight: 500;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>评论情感分析</h1>
-        <textarea id="comment" placeholder="请粘贴用户评论，支持多句批量分析"></textarea>
-        <button onclick="checkSentiment()">开始分析</button>
-        <div id="result"></div>
+  <div class="container">
+    <h1 class="title">评论情感分析</h1>
+    <div class="input-box">
+      <textarea id="commentText" placeholder="请粘贴用户评论内容，支持单条/多条分析"></textarea>
+      <button class="analyze-btn" onclick="startAnalyze()">开始分析</button>
     </div>
+    <div class="result-box" id="resultArea"></div>
+  </div>
 
-<script>
-// 🌟 核心优化：升级分析逻辑，解决“判断不准”问题
-// 1. 关键词库升级（分权重，贴合AI产品评论场景）
-const sentimentConfig = {
-    positive: [
-        { word: "好用", weight: 2 },
-        { word: "准确", weight: 2 },
-        { word: "清晰", weight: 2 },
-        { word: "智能", weight: 2 },
-        { word: "推荐", weight: 1.5 },
-        { word: "满意", weight: 1.5 },
-        { word: "识别快", weight: 2 },
-        { word: "翻译准", weight: 2 },
-        { word: "流畅", weight: 1.5 },
-        { word: "便捷", weight: 1.5 }
-    ],
-    negative: [
-        { word: "卡顿", weight: 2 },
-        { word: "噪音", weight: 2 },
-        { word: "难用", weight: 2.5 },
-        { word: "失望", weight: 2 },
-        { word: "垃圾", weight: 3 },
-        { word: "识别慢", weight: 2 },
-        { word: "耗电快", weight: 1.5 },
-        { word: "误差大", weight: 2 },
-        { word: "麻烦", weight: 1.5 }
-    ],
-    // 2. 新增否定词库（解决“不好用”“不推荐”判断错误）
-    negativeWords: ["不", "没", "无", "不是", "不行", "不会"]
-};
+  <script>
+    // 情感词库（带权重）+ 否定词过滤，分析更精准
+    const positiveList = [
+      { word: "好用", weight: 2 },{ word: "准确", weight: 2 },
+      { word: "清晰", weight: 2 },{ word: "智能", weight: 2 },
+      { word: "流畅", weight: 1.5 },{ word: "便捷", weight: 1.5 },
+      { word: "推荐", weight: 1.5 },{ word: "满意", weight: 1.5 }
+    ];
+    const negativeList = [
+      { word: "卡顿", weight: 2 },{ word: "噪音", weight: 2 },
+      { word: "难用", weight: 2.5 },{ word: "失望", weight: 2 },
+      { word: "识别慢", weight: 2 },{ word: "耗电快", weight: 1.5 },
+      { word: "麻烦", weight: 1.5 },{ word: "误差大", weight: 2 }
+    ];
+    const denyWords = ["不", "没", "不是", "不会", "无需", "不要"];
 
-// 核心分析函数
-function checkSentiment() {
-    const text = document.getElementById("comment").value.trim();
-    const resultDom = document.getElementById("result");
-
-    // 空输入判断
-    if (!text) {
-        resultDom.innerHTML = `<div class="result-item">请粘贴用户评论后再分析~</div>`;
+    function startAnalyze() {
+      const text = document.getElementById("commentText").value.trim();
+      const resArea = document.getElementById("resultArea");
+      if (!text) {
+        resArea.innerHTML = `<div class="result-item">请输入评论内容后再分析~</div>`;
         return;
-    }
+      }
 
-    // 初始化分数
-    let positiveScore = 0;
-    let negativeScore = 0;
-    let positiveKeywords = [];
-    let negativeKeywords = [];
+      let posScore = 0, negScore = 0;
+      let posKeys = [], negKeys = [];
 
-    // 3. 分析正面关键词（结合否定词判断）
-    sentimentConfig.positive.forEach(item => {
+      // 正面词检测（过滤否定）
+      positiveList.forEach(item => {
         if (text.includes(item.word)) {
-            // 判断是否有否定词（比如“不好用”不算正面）
-            const hasNegative = sentimentConfig.negativeWords.some(neg => {
-                const index = text.indexOf(item.word);
-                return index > 0 && text.indexOf(neg) === index - 1;
-            });
-            if (!hasNegative) {
-                positiveScore += item.weight;
-                positiveKeywords.push(item.word);
-            }
+          const hasDeny = denyWords.some(d => {
+            const idx = text.indexOf(item.word);
+            return idx > 0 && text.substring(idx-2, idx).includes(d);
+          });
+          if (!hasDeny) {
+            posScore += item.weight;
+            posKeys.push(item.word);
+          }
         }
-    });
+      });
 
-    // 4. 分析负面关键词（结合否定词判断）
-    sentimentConfig.negative.forEach(item => {
+      // 负面词检测（过滤否定）
+      negativeList.forEach(item => {
         if (text.includes(item.word)) {
-            const hasNegative = sentimentConfig.negativeWords.some(neg => {
-                const index = text.indexOf(item.word);
-                return index > 0 && text.indexOf(neg) === index - 1;
-            });
-            if (!hasNegative) {
-                negativeScore += item.weight;
-                negativeKeywords.push(item.word);
-            }
+          const hasDeny = denyWords.some(d => {
+            const idx = text.indexOf(item.word);
+            return idx > 0 && text.substring(idx-2, idx).includes(d);
+          });
+          if (!hasDeny) {
+            negScore += item.weight;
+            negKeys.push(item.word);
+          }
         }
-    });
+      });
 
-    // 5. 精准判断情感倾向（结合分数，不是单纯数数量）
-    let sentiment = "中性评价";
-    let sentimentClass = "sentiment-neutral";
-    if (positiveScore > negativeScore && positiveScore > 0) {
-        sentiment = "正面评价";
-        sentimentClass = "sentiment-positive";
-    } else if (negativeScore > positiveScore && negativeScore > 0) {
-        sentiment = "负面评价";
-        sentimentClass = "sentiment-negative";
-    }
+      // 判断情感
+      let sentiment = "中性评价", sentimentClass = "sentiment-neutral";
+      if (posScore > negScore && posScore > 0) {
+        sentiment = "正面评价"; sentimentClass = "sentiment-positive";
+      } else if (negScore > posScore && negScore > 0) {
+        sentiment = "负面评价"; sentimentClass = "sentiment-negative";
+      }
 
-    // 6. 输出详细结果（清晰、有依据）
-    resultDom.innerHTML = `
+      // 渲染结果
+      resArea.innerHTML = `
         <div class="result-item">情感倾向：<span class="${sentimentClass}">${sentiment}</span></div>
-        <div class="result-item">正面关键词：<span class="keywords">${positiveKeywords.length > 0 ? positiveKeywords.join("、") : "无"}</span></div>
-        <div class="result-item">负面关键词：<span class="keywords">${negativeKeywords.length > 0 ? negativeKeywords.join("、") : "无"}</span></div>
-        <div class="result-item">判断依据：基于关键词权重及否定句式过滤，确保分析精准</div>
-    `;
-}
-</script>
+        <div class="result-item">正面关键词：<span class="keyword-tag">${posKeys.length ? posKeys.join("、") : "无"}</span></div>
+        <div class="result-item">负面关键词：<span class="keyword-tag">${negKeys.length ? negKeys.join("、") : "无"}</span></div>
+      `;
+    }
+  </script>
 </body>
 </html>
